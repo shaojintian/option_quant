@@ -1,4 +1,6 @@
 # 14天关注股票列表，卖put
+# 二周调仓一次
+
 import schedule
 import time
 from datetime import date, timedelta
@@ -57,7 +59,7 @@ def my_task():
                 RESULT.append(option.symbol)
 
     RESULT = list(set(RESULT))
-    print(RESULT)
+    print(RESULT,date.today())
 
 
 def find_next_friday(start_date):
