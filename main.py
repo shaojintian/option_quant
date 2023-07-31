@@ -1,10 +1,13 @@
 # 14天关注股票列表，卖put
 # 二周调仓一次
+import json
 
+import itchat
 import schedule
 import time
 from datetime import date, timedelta
-from longbridge.openapi import TradeContext, Config,QuoteContext
+from longbridge.openapi import TradeContext, Config, QuoteContext
+from send_wx_msg import send_wechat_message
 
 config = Config.from_env()
 ctx = QuoteContext(config)
@@ -42,24 +45,29 @@ def my_task():
             continue
         price_now = int(resp[0].price)
         # 找期权链
-        resp_options = ctx.option_chain_info_by_date(SYMBOL[i],EXPIRY)
+        resp_options = ctx.option_chain_info_by_date(SYMBOL[i], EXPIRY)
         if not resp_options:
             continue
         for option in resp_options:
             if option.price == price_now:
                 PUTS_WAITED_TO_SELL.append(option.put_symbol)
 
-        #print(len(PUTS_WAITED_TO_SELL))
+        # print(len(PUTS_WAITED_TO_SELL))
         # 查询期权信息
         resp = ctx.option_quote(PUTS_WAITED_TO_SELL)
         if not resp:
             continue
         for option in resp:
-            if (option.high -  option.low)/option.low > 0.6:
+            if (option.high - option.low) / option.low > 0.6:
                 RESULT.append(option.symbol)
 
     RESULT = list(set(RESULT))
-    print(RESULT,date.today())
+    result_json = str(date.today()) + "," + json.dumps(RESULT)
+    print(result_json)
+    # try:
+    #     send_wechat_message(friend_name="filehelper", message=result_json)
+    # except:
+    #     pass
 
 
 def find_next_friday(start_date):
@@ -72,7 +80,11 @@ def find_next_friday(start_date):
 
     return two_weeks_later
 
+
 if __name__ == '__main__':
+    # # 登录微信个人号
+    # itchat.auto_login(enableCmdQR=False)
+    #
     my_task()
     # 每天的特定时间执行任务（这里设定为每天的9点执行）
     schedule.every().day.at("22:30").do(my_task)
