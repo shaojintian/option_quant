@@ -1,4 +1,6 @@
 # 15天tqqq卖put
+import schedule
+import time
 from datetime import date
 from longbridge.openapi import TradeContext, Config,QuoteContext
 
@@ -6,26 +8,64 @@ config = Config.from_env()
 ctx = QuoteContext(config)
 account = TradeContext(config)
 ###################
-SYMBOL = ["TQQQ.US","SOXL.US","SPXL.US"]
-EXPIRY = date(2023,8,15)
+SYMBOL = []
+EXPIRY = date(2023,8,18)
 STRIKE = 400
 OPTION_TYPE = "PUT"
 ORDER_TYPE = "LMT"
 
 PUTS_WAITED_TO_SELL = []
 
+
 # # 查询账户余额
 # resp = account.account_balance()
 # print(resp)
 
-#
-resp = ctx.intraday(SYMBOL[0], 1)
-print(resp)
+def my_task():
+    RESULT = []
+    # 在这里写你要执行的任务
+    print("定时任务执行中...")
+    resp = ctx.watch_list()
+    if resp:
+        # 遍历每个WatchListGroup
+        for watch_list_group in resp:
+            # 遍历每个WatchListSecurity
+            for security in watch_list_group.securities:
+                # 获取symbol并添加到列表中
+                symbol = security.symbol
+                SYMBOL.append(symbol)
 
-# resp = ctx.option_chain_info_by_date(SYMBOL[0],date(2023, 8, 18))
-# print(resp)
+    for i in range(len(SYMBOL)):
+        #
+        resp = ctx.intraday(SYMBOL[i])
+        if not resp:
+            continue
+        price_now = int(resp[0].price)
+        # 找期权链
+        resp_options = ctx.option_chain_info_by_date(SYMBOL[i],EXPIRY)
+        if not resp_options:
+            continue
+        for option in resp_options:
+            if option.price == price_now:
+                PUTS_WAITED_TO_SELL.append(option.put_symbol)
+
+        # 查询期权信息
+        resp = ctx.option_quote(PUTS_WAITED_TO_SELL)
+        if not resp:
+            continue
+        for option in resp:
+            if (option.high -  option.low)/option.low > 0.6:
+                RESULT.append(option.symbol)
+
+    RESULT = list(set(RESULT))
+    print(RESULT)
 
 
-# # 查询期权信息
-# resp = ctx.option_quote(PUTS_WAITED_TO_SELL)
-# print(resp)
+if __name__ == '__main__':
+
+    # 每天的特定时间执行任务（这里设定为每天的9点执行）
+    schedule.every().day.at("22:30").do(my_task)
+
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
