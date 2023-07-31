@@ -19,11 +19,11 @@ PUTS_WAITED_TO_SELL = []
 # print(resp)
 
 #
-resp = ctx.trades(SYMBOL[0], 1)
+resp = ctx.intraday(SYMBOL[0], 1)
 print(resp)
 
-resp = ctx.option_chain_info_by_date(SYMBOL[0],date(2023, 8, 18))
-print(resp)
+# resp = ctx.option_chain_info_by_date(SYMBOL[0],date(2023, 8, 18))
+# print(resp)
 
 
 # # 查询期权信息
