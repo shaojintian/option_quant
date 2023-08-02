@@ -1,4 +1,4 @@
-# 14天关注股票列表，卖put
+# 120天关注股票列表，卖put
 # 二周调仓一次
 import json
 
@@ -58,7 +58,9 @@ def my_task():
         if not resp:
             continue
         for option in resp:
-            if (option.high - option.low) / option.low > 0.6:
+            if option.low == 0:
+                continue
+            if (option.high - option.low) / option.low > 0.5:
                 RESULT.append(option.symbol)
 
     RESULT = list(set(RESULT))
@@ -71,8 +73,8 @@ def my_task():
 
 
 def find_next_friday(start_date):
-    # 计算距离当前日期两周后的日期
-    two_weeks_later = start_date + timedelta(weeks=2)
+    # 计算距离当前日期1.5月后的日期
+    two_weeks_later = start_date + timedelta(weeks=int(4*1.5))
 
     # 找到该日期最近的周五
     while two_weeks_later.weekday() != 4:  # 周五的weekday()为4
