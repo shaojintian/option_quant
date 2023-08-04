@@ -1,5 +1,4 @@
-# 120天关注股票列表，卖put
-# 二周调仓一次
+#1关注股票列表，财报7+30，strangle财报波动率套利
 import json
 
 import itchat
@@ -52,19 +51,19 @@ def my_task():
             if option.price == price_now:
                 PUTS_WAITED_TO_SELL.append(option.put_symbol)
 
-        # print(len(PUTS_WAITED_TO_SELL))
         # 查询期权信息
         resp = ctx.option_quote(PUTS_WAITED_TO_SELL)
         if not resp:
             continue
         for option in resp:
-            if option.low == 0:
+            if option.low or option.high == 0:
                 continue
             if (option.high - option.low) / option.low > 0.5:
                 RESULT.append(option.symbol)
 
     RESULT = list(set(RESULT))
     result_json = str(date.today()) + "," + json.dumps(RESULT)
+    print(len(PUTS_WAITED_TO_SELL))
     print(result_json)
     # try:
     #     send_wechat_message(friend_name="filehelper", message=result_json)
@@ -73,8 +72,8 @@ def my_task():
 
 
 def find_next_friday(start_date):
-    # 计算距离当前日期1.5月后的日期
-    two_weeks_later = start_date + timedelta(weeks=int(4*1.5))
+    # 计算距离当前日期4周后的日期
+    two_weeks_later = start_date + timedelta(weeks=4)
 
     # 找到该日期最近的周五
     while two_weeks_later.weekday() != 4:  # 周五的weekday()为4
