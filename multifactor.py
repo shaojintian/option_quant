@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 
 
-
 #初始化函数 
 def initialize(context):
     g.benchmark = '399303.XSHE'
@@ -119,10 +118,10 @@ def prepare_stock_list(context):
         g.yesterday_HL_list = list(df.code)
     else:
         g.yesterday_HL_list = []
-    #0-0 过滤大跌
-    g.no_trading_today_signal = benchmark_filter(g.benchmark)
-    #判断今天是否为账户资金再平衡的日期,A股小企业根本不赚钱的,避开财报下跌
-    g.no_trading_today_signal = today_is_between(context, '04-05', '04-30')
+    
+    #0-0 过滤大跌 
+    g.no_trading_today_signal = benchmark_filter(g.benchmark) or today_is_between(context, '04-05', '04-30')
+    #0-1 判断今天是否为账户资金再平衡的日期,A股小企业根本不赚钱的,避开财报下跌
     
 #1-2 选股模块
 def get_stock_list(context):
