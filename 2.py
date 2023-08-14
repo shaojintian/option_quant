@@ -148,6 +148,9 @@ def initialize(context):
     run_daily(TRADE, time='22:00', reference_security='FG8888.XZCE')
     run_daily(TRADE, time='22:30', reference_security='FG8888.XZCE')
     run_daily(TRADE, time='23:00', reference_security='FG8888.XZCE')
+
+    # 节假日前清仓
+    run_weekly(JIEJIARI, weekday=-1, time='9:30', reference_security='FG8888.XZCE')
     # 收盘记录
     run_daily(after_market_close, time='15:30', reference_security='FG8888.XZCE')
     # # 风控止损
@@ -240,10 +243,24 @@ def market_open(context):
 
 # 交易
 def TRADE(context):
+    # fileter 节假日
+    trade_days = get_trade_days(start_date=context.current_dt, end_date=context.current_dt + timedelta(days=1))
+    if (context.current_dt + timedelta(days=1)) not in trade_days:
+        return
     for future_code in g.future_list:
         symbol = re.search(r'^(\D+)', future_code).group(1)
         deal_long(context, future_code, symbol)
         # deal_short(context, future_code, symbol)
+
+
+# 交易
+def JIEJIARI(context):
+    for future in context.portfolio.short_positions.keys():
+        order_target_value(future, 0, side='short')
+        g.porfolio_short_price[future] = 0
+    for future in context.portfolio.long_positions.keys():
+        order_target_value(future, 0, side='long')
+        g.porfolio_long_price[future] = 0
 
 
 # 交易逻辑
